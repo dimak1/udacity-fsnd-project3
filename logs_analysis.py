@@ -7,28 +7,27 @@
 import psycopg2
 import sys
 
-print("Starting Logs Analysis...")
-
 DBNAME = "news"
 
 
 def connect():
     """Connect to database"""
-    global conn, cur
     try:
         conn = psycopg2.connect(database=DBNAME)
         cur = conn.cursor()
-        print("Successfully connected to '" + DBNAME + "' database.")
-    except:
-        print("Error connecting to database. Exiting...")
+        # print("Successfully connected to '" + DBNAME + "' database.")
+        return conn, cur
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error connecting to database: \n" + error)
+        print("\nExiting...")
         sys.exit()
 
 
-def disconnect():
+def disconnect(conn, cur):
     """Disconnect from database"""
     cur.close()
     conn.close()
-    print("\nDisconnected from database. Exiting...")
+    # print("\nDisconnected from database.")
 
 
 def print_top_articles():
@@ -41,18 +40,28 @@ def print_top_articles():
     get_popular_articles_names = (
         "SELECT title, num " +
         "FROM top_articles, articles " +
-        "WHERE top_articles.path LIKE '%' || articles.slug limit 3;")
+        "WHERE top_articles.path = '/article/' || articles.slug limit 3;")
 
+    print("\nRunning Task: " + print_top_articles.__doc__ + "\n")
+
+    conn, cur = connect()
     cur.execute(create_view_top_articles)
     cur.execute(get_popular_articles_names)
     results = cur.fetchall()
-    for result in results:
-        print("\t", result[0], "-", result[1], "views")
+
+    for title, views in results:
+        print('\t{} - {} views'.format(title, views))
+
+    disconnect(conn, cur)
 
 
 def print_top_authors():
     """Who are the most popular article authors of all time?"""
 
+    create_view_top_articles = (
+        "CREATE VIEW top_articles AS " +
+        "SELECT COUNT(path) AS num, path " +
+        "FROM log GROUP BY path ORDER BY num DESC;")
     create_view_top_authors = (
         "CREATE VIEW top_authors as " +
         "SELECT sum(num) as views, author " +
@@ -63,11 +72,18 @@ def print_top_authors():
         "FROM authors, top_authors " +
         "WHERE top_authors.author = authors.id ORDER BY views DESC;")
 
+    print("\nRunning Task: " + print_top_authors.__doc__ + "\n")
+
+    conn, cur = connect()
+    cur.execute(create_view_top_articles)
     cur.execute(create_view_top_authors)
     cur.execute(get_popular_artists)
     results = cur.fetchall()
-    for result in results:
-        print("\t", result[0], "-", result[1], "views")
+
+    for title, views in results:
+        print('\t\"{}\" - {} views'.format(title, views))
+
+    disconnect(conn, cur)
 
 
 def print_errors():
@@ -90,22 +106,23 @@ def print_errors():
         "(CAST(error_requests.count as decimal)/" +
         "total_requests.count*100.00)>1 ORDER BY percent DESC;")
 
+    print("\nRunning Task: " + print_errors.__doc__ + "\n")
+
+    conn, cur = connect()
     cur.execute(create_view_total_requests)
     cur.execute(create_view_error_requests)
     cur.execute(calculate_error_percentage)
-
     results = cur.fetchall()
+
     for result in results:
         print('\t{0:%B %d, %Y} - {1}% errors'.format(result[0], result[1]))
-        # print("\t", result[0], "-", result[1], "% errors")
+
+    disconnect(conn, cur)
 
 
 if __name__ == '__main__':
-    connect()
-    print("\nRunning Task 1: " + print_top_articles.__doc__ + "\n")
+    print("Starting Logs Analysis...")
     print_top_articles()
-    print("\nRunning Task 2: " + print_top_authors.__doc__ + "\n")
     print_top_authors()
-    print("\nRunning Task 3: " + print_errors.__doc__ + "\n")
     print_errors()
-    disconnect()
+    print("Finished Logs Analysis...")
