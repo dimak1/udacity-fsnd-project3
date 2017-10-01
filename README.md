@@ -6,6 +6,18 @@ Third project from Udacity's [Full-Stack Web Developer Nanodegree Program](https
 
 For this project I built a reporting tool that prints out reports (in plain text) based on the data in the database. This reporting tool is a Python program using the psycopg2 module to connect to the database.
 
+The __news__ database includes three tables:
+
+- Authors
+- Articles
+- Log
+
+Program generates three reports answering following questions:
+
+- What are the most popular three articles of all time?
+- Who are the most popular article authors of all time?
+- On which days did more than 1% of requests lead to errors?
+
 
 ### How to setup
 
