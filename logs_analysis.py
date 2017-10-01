@@ -31,7 +31,7 @@ def disconnect():
     print("\nDisconnected from database. Exiting...")
 
 
-def run_task_1():
+def print_top_articles():
     """What are the most popular three articles of all time?"""
 
     create_view_top_articles = (
@@ -50,7 +50,7 @@ def run_task_1():
         print("\t", result[0], "-", result[1], "views")
 
 
-def run_task_2():
+def print_top_authors():
     """Who are the most popular article authors of all time?"""
 
     create_view_top_authors = (
@@ -70,7 +70,7 @@ def run_task_2():
         print("\t", result[0], "-", result[1], "views")
 
 
-def run_task_3():
+def print_errors():
     """On which days did more than 1% of requests lead to errors?"""
 
     create_view_total_requests = (
@@ -96,15 +96,16 @@ def run_task_3():
 
     results = cur.fetchall()
     for result in results:
-        print("\t", result[0], "-", result[1], "% errors")
+        print('\t{0:%B %d, %Y} - {1}% errors'.format(result[0], result[1]))
+        # print("\t", result[0], "-", result[1], "% errors")
 
 
 if __name__ == '__main__':
     connect()
-    print("\nRunning Task 1: " + run_task_1.__doc__ + "\n")
-    run_task_1()
-    print("\nRunning Task 2: " + run_task_2.__doc__ + "\n")
-    run_task_2()
-    print("\nRunning Task 3: " + run_task_3.__doc__ + "\n")
-    run_task_3()
+    print("\nRunning Task 1: " + print_top_articles.__doc__ + "\n")
+    print_top_articles()
+    print("\nRunning Task 2: " + print_top_authors.__doc__ + "\n")
+    print_top_authors()
+    print("\nRunning Task 3: " + print_errors.__doc__ + "\n")
+    print_errors()
     disconnect()
